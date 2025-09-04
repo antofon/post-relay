@@ -3,6 +3,9 @@ import { OrderSimulator } from "@/components/OrderSimulator";
 import { NotificationPreview } from "@/components/NotificationPreview";
 import { WebhookDashboard } from "@/components/WebhookDashboard";
 import { MetricsDashboard } from "@/components/MetricsDashboard";
+import { CustomerAnalytics } from "@/components/CustomerAnalytics";
+import { HowItWorks } from "@/components/HowItWorks";
+import { InfoModal } from "@/components/Modal";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -20,6 +23,11 @@ export interface Order {
 
 const Index = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [modalContent, setModalContent] = useState<{
+    title: string;
+    content: string;
+    data?: Record<string, any>;
+  } | null>(null);
   const [orders, setOrders] = useState<Order[]>([
     {
       id: "ORD-001",
@@ -100,17 +108,18 @@ const Index = () => {
     return messages[status];
   };
 
-  const [activeView, setActiveView] = useState<'simulator' | 'notifications' | 'webhooks' | 'metrics'>('simulator');
+  const [activeView, setActiveView] = useState<'simulator' | 'notifications' | 'webhooks' | 'metrics' | 'howItWorks'>('metrics');
 
   const sidebarItems = [
-    { id: 'simulator', label: 'Order Simulator', icon: '📦' },
-    { id: 'notifications', label: 'Live Notifications', icon: '🔔' },
-    { id: 'webhooks', label: 'Webhook Dashboard', icon: '🔗' },
-    { id: 'metrics', label: 'Analytics', icon: '📊' },
+    { id: 'metrics', label: 'Customer Analytics', icon: '📊' },
+    { id: 'simulator', label: 'Product', icon: '📦' },
+    { id: 'notifications', label: 'Refunds', icon: '💳' },
+    { id: 'webhooks', label: 'Revenue', icon: '💰' },
+    { id: 'howItWorks', label: 'How It Works', icon: '❓' },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex relative">
+    <div className="min-h-screen bg-white flex flex-col relative">
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div 
@@ -119,20 +128,21 @@ const Index = () => {
         />
       )}
       
-      {/* Dark Sidebar */}
+      <div className="flex flex-1">
+      {/* Light Sidebar */}
       <div className={`
-        fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-gray-900 text-white flex flex-col transform transition-transform duration-300 ease-in-out
+        fixed lg:relative inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 flex flex-col transform transition-transform duration-300 ease-in-out
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo Section */}
-        <div className="p-6 border-b border-gray-800">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <span className="text-gray-900 font-bold text-sm">PR</span>
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <span className="text-white font-bold text-sm">PR</span>
             </div>
             <div>
-              <h1 className="text-lg font-semibold">Post Relay</h1>
-              <p className="text-xs text-gray-400">Dashboard</p>
+              <h1 className="text-lg font-semibold text-gray-900">PostRelay</h1>
+              <p className="text-xs text-gray-500">Dashboard</p>
             </div>
           </div>
         </div>
@@ -146,8 +156,8 @@ const Index = () => {
                 onClick={() => setActiveView(item.id as any)}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200 text-sm ${
                   activeView === item.id 
-                    ? 'bg-blue-600 text-white' 
-                    : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
                 <span className="text-base">{item.icon}</span>
@@ -158,14 +168,14 @@ const Index = () => {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-200">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
-              <span className="text-xs font-medium">U</span>
+            <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+              <span className="text-xs font-medium text-gray-700">U</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">User</p>
-              <p className="text-xs text-gray-400 truncate">user@postrelay.com</p>
+              <p className="text-sm font-medium text-gray-900 truncate">User</p>
+              <p className="text-xs text-gray-500 truncate">user@analytics.com</p>
             </div>
           </div>
         </div>
@@ -189,17 +199,37 @@ const Index = () => {
               <h2 className="text-lg lg:text-xl font-semibold text-gray-900">
                 {sidebarItems.find(item => item.id === activeView)?.label}
               </h2>
-              <p className="text-sm text-gray-500 mt-1 hidden sm:block">
-                Overview
-              </p>
             </div>
             <div className="flex items-center gap-3">
-              <button className="text-gray-400 hover:text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-5 5-5-5h5V3h0z" />
+              <button 
+                className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                onClick={() => {
+                  // Export/Download functionality
+                  const data = { orders, notifications, timestamp: new Date().toISOString() };
+                  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'customer-analytics-data.json';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
+                Download Data
               </button>
-              <button className="text-gray-400 hover:text-gray-600">
+              <button 
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                onClick={() => setModalContent({
+                  title: 'Settings',
+                  content: 'Settings panel features:\n• Theme preferences\n• Data refresh intervals\n• Notification settings\n• Export options\n• Dashboard customization'
+                })}
+                title="Settings"
+              >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -293,12 +323,28 @@ const Index = () => {
           )}
 
           {activeView === 'metrics' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <MetricsDashboard orders={orders} notifications={notifications} />
-            </div>
+            <CustomerAnalytics 
+              orders={orders} 
+              notifications={notifications} 
+              onShowModal={(title, content, data) => setModalContent({ title, content, data })}
+            />
+          )}
+
+          {activeView === 'howItWorks' && (
+            <HowItWorks />
           )}
         </main>
       </div>
+      </div>
+      
+      {/* Modal */}
+      <InfoModal
+        isOpen={!!modalContent}
+        onClose={() => setModalContent(null)}
+        title={modalContent?.title || ''}
+        content={modalContent?.content || ''}
+        data={modalContent?.data}
+      />
     </div>
   );
 };
