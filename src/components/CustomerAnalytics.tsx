@@ -37,10 +37,10 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
   // Filter state for showing/hiding different sections
   const [filters, setFilters] = useState({
     refundChart: true,
-    productViews: false,
-    shareProducts: false,
-    messages: false,
-    topCustomers: false
+    productViews: true,
+    shareProducts: true,
+    messages: true,
+    topCustomers: true
   });
 
   const handleFilterChange = (filterName: keyof typeof filters) => {
