@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   BarChart, 
   Bar, 
@@ -32,6 +34,22 @@ interface CustomerAnalyticsProps {
 }
 
 export function CustomerAnalytics({ orders, notifications, onShowModal }: CustomerAnalyticsProps) {
+  // Filter state for showing/hiding different sections
+  const [filters, setFilters] = useState({
+    refundChart: true,
+    productViews: false,
+    shareProducts: false,
+    messages: false,
+    topCustomers: false
+  });
+
+  const handleFilterChange = (filterName: keyof typeof filters) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterName]: !prev[filterName]
+    }));
+  };
+
   // Mock data to match the target design
   const overviewData = [
     { title: "All time", value: "1,368", icon: "👥", color: "text-yellow-600", bgColor: "bg-yellow-100" },
@@ -98,6 +116,83 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
         </div>
       </div>
 
+      {/* Filter Controls */}
+      <Card className="p-4 border border-gray-200 shadow-sm">
+        <div className="flex flex-wrap items-center gap-6">
+          <span className="text-sm font-medium text-gray-700">Show sections:</span>
+          
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="refundChart"
+              checked={filters.refundChart}
+              onCheckedChange={() => handleFilterChange('refundChart')}
+            />
+            <label
+              htmlFor="refundChart"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Refund Chart & Countries
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="productViews"
+              checked={filters.productViews}
+              onCheckedChange={() => handleFilterChange('productViews')}
+            />
+            <label
+              htmlFor="productViews"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Product Views Chart
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="shareProducts"
+              checked={filters.shareProducts}
+              onCheckedChange={() => handleFilterChange('shareProducts')}
+            />
+            <label
+              htmlFor="shareProducts"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Share Products
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="messages"
+              checked={filters.messages}
+              onCheckedChange={() => handleFilterChange('messages')}
+            />
+            <label
+              htmlFor="messages"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Messages
+            </label>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="topCustomers"
+              checked={filters.topCustomers}
+              onCheckedChange={() => handleFilterChange('topCustomers')}
+            />
+            <label
+              htmlFor="topCustomers"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+            >
+              Top Customers
+            </label>
+          </div>
+        </div>
+      </Card>
+
       {/* Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {overviewData.map((item, index) => (
@@ -143,7 +238,8 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Charts */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Refund Requests */}
+          {/* Refund Requests - Entire card conditional */}
+          {filters.refundChart && (
           <Card className="p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Refund requests</h3>
@@ -221,8 +317,10 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
               </div>
             </div>
           </Card>
+          )}
 
           {/* Product Views */}
+          {filters.productViews && (
           <Card className="p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Product views</h3>
@@ -260,8 +358,10 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
               </BarChart>
             </ResponsiveContainer>
           </Card>
+          )}
 
           {/* Share Your Products */}
+          {filters.shareProducts && (
           <Card className="p-6 border border-gray-200 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Share your products</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -344,10 +444,12 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
               </Button>
             </div>
           </Card>
+          )}
         </div>
 
         {/* Right Column - Messages */}
         <div className="space-y-6">
+          {filters.messages && (
           <Card className="p-6 border border-gray-200 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Message</h3>
@@ -386,8 +488,10 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
               View all messages
             </Button>
           </Card>
+          )}
 
           {/* Top Customers */}
+          {filters.topCustomers && (
           <Card className="p-6 border border-gray-200 shadow-sm">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Top customers</h3>
             <div className="space-y-3">
@@ -437,6 +541,7 @@ export function CustomerAnalytics({ orders, notifications, onShowModal }: Custom
               View all
             </Button>
           </Card>
+          )}
         </div>
       </div>
     </div>
